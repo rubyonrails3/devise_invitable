@@ -13,7 +13,7 @@ module Devise
     #
     # Examples:
     #
-    #   User.find(1).invited?                               # => true/false
+    #   User.find(1).is_invited?                               # => true/false
     #   User.invite!(:email => 'someone@example.com')       # => send invitation
     #   User.accept_invitation!(:invitation_token => '...') # => accept invitation with a token
     #   User.find(1).accept_invitation!                     # => accept invitation
@@ -25,32 +25,32 @@ module Devise
 
       included do
         include ::DeviseInvitable::Inviter
-        belongs_to :invited_by, :polymorphic => true
+        belongs_to :inviter, :polymorphic => true
       end
 
       # Accept an invitation by clearing invitation token and confirming it if model
       # is confirmable
       def accept_invitation!
-        if self.invited? && self.valid?
+        if self.is_invited? && self.valid?
           self.invitation_token = nil
           self.save
         end
       end
 
       # Verifies whether a user has been invited or not
-      def invited?
+      def is_invited?
         persisted? && invitation_token.present?
       end
 
       # Reset invitation token and send invitation again
       def invite!
-        if new_record? || invited?
+        if new_record? || is_invited?
           @skip_password = true
           self.skip_confirmation! if self.new_record? && self.respond_to?(:skip_confirmation!)
           generate_invitation_token if self.invitation_token.nil?
           self.invitation_sent_at = Time.now.utc
           if save(:validate => self.class.validate_on_invite)
-            self.invited_by.decrement_invitation_limit! if self.invited_by
+            self.inviter.decrement_invitation_limit! if self.inviter
             !!deliver_invitation unless @skip_invitation
           end
         end
@@ -60,12 +60,12 @@ module Devise
       # invited, we need to calculate if the invitation time has not expired
       # for this user, in other words, if the invitation is still valid.
       def valid_invitation?
-        invited? && invitation_period_valid?
+        is_invited? && invitation_period_valid?
       end
 
       # Only verify password when is not invited
       def valid_password?(password)
-        super unless invited?
+        super unless is_invited?
       end
 
       protected
@@ -81,7 +81,7 @@ module Devise
 
         # Clear invitation token when reset password token is cleared too
         def clear_reset_password_token
-          self.invitation_token = nil if invited?
+          self.invitation_token = nil if is_invited?
           super
         end
 
@@ -119,15 +119,15 @@ module Devise
         # user and send invitation to it. If user is found, returns the user with an
         # email already exists error.
         # Attributes must contain the user email, other attributes will be set in the record
-        def invite!(attributes={}, invited_by=nil, &block)
+        def invite!(attributes={}, inviter=nil, &block)
           invitable = find_or_initialize_with_error_by(invite_key, attributes.delete(invite_key))
           invitable.attributes = attributes
-          invitable.invited_by = invited_by
+          invitable.inviter = inviter
 
           if invitable.new_record?
             invitable.errors.clear if invitable.email.try(:match, Devise.email_regexp)
           else
-            invitable.errors.add(invite_key, :taken) unless invitable.invited?
+            invitable.errors.add(invite_key, :taken) unless invitable.is_invited?
           end
 
           if invitable.errors.empty?

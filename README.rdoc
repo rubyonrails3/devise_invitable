@@ -157,7 +157,7 @@ After an invitation is accepted, the invitee will be redirected to after_accept_
 
 The invitation email includes a link to accept the invitation that looks like this:  <tt>/users/invitation/accept?invitation_token=abcd123</tt>. When clicked, the invited must set a password in order to accept its invitation. Note that if the invitation_token is not present or not valid, the invited is redirected to after_sign_out_path_for(resource_name).
 
-The controller sets the invited_by_id attribute for the new user to the current user.  This will let you easily keep track of who invited who.
+The controller sets the inviter_id attribute for the new user to the current user.  This will let you easily keep track of who invited who.
 
 == Controller filter
 

@@ -27,8 +27,8 @@ module DeviseInvitable
       apply_devise_schema :invitation_token,   String, :limit => 60
       apply_devise_schema :invitation_sent_at, DateTime
       apply_devise_schema :invitation_limit, Integer
-      apply_devise_schema :invited_by_id, Integer
-      apply_devise_schema :invited_by_type, String
+      apply_devise_schema :inviter_id, Integer
+      apply_devise_schema :inviter_type, String
     end
   end
 end

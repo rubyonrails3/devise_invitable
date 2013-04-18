@@ -159,14 +159,14 @@ class InvitationTest < ActionDispatch::IntegrationTest
     assert_equal 2, user.invitation_limit
   end
 
-  test 'invited_by should be set when user invites someone' do
+  test 'inviter should be set when user invites someone' do
     user = create_full_user
     sign_in_as_user(user)
     send_invitation
 
     invited_user = User.where(:email => 'user@test.com').first
     assert invited_user
-    assert_equal user, invited_user.invited_by
+    assert_equal user, invited_user.inviter
   end
 
   test 'authenticated user should not be able to send an admin invitation' do
