@@ -26,14 +26,17 @@ module Devise
       included do
         include ::DeviseInvitable::Inviter
         belongs_to :inviter, :polymorphic => true
+        define_model_callbacks :invitation_accepted
       end
 
       # Accept an invitation by clearing invitation token and confirming it if model
       # is confirmable
       def accept_invitation!
         if self.is_invited? && self.valid?
-          self.invitation_token = nil
-          self.save
+          run_callbacks :invitation_accepted do
+            self.invitation_token = nil
+            self.save
+          end
         end
       end
 
